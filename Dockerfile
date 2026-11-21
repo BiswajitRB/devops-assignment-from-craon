@@ -13,8 +13,9 @@ RUN apt-get update && \
 
 COPY requirements.txt .
 
-# Install dependencies into /install folder
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+# Upgrade pip and install dependencies with network timeout & retries
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir --default-timeout=120 --retries=5 --prefix=/install -r requirements.txt
 
 # Stage 2: Minimal Distroless Runtime Image
 # Google Distroless Python image contains ONLY Python and essential C runtimes.
