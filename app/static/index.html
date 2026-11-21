@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>BINANCE Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BINANCE Live Crypto Dashboard</title>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -9,35 +11,68 @@
         body {
             background: #05070d;
             color: white;
-            font-family: Arial;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             text-align: center;
+            margin: 0;
+            padding: 20px;
         }
 
         h1 {
-            margin-top: 20px;
+            margin-top: 10px;
             color: #67e8f9;
             text-shadow: 0 0 10px #22d3ee;
+            font-size: 1.8rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            margin-bottom: 15px;
+            background: #111827;
+            border: 1px solid #1f2937;
         }
 
         .card {
             background: #111827;
             padding: 20px;
-            margin: 20px auto;
-            width: 60%;
-            border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.7);
+            margin: 15px auto;
+            max-width: 900px;
+            border-radius: 12px;
+            border: 1px solid #1f2937;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        .card h3 {
+            margin-top: 0;
+            font-size: 1.1rem;
+            color: #94a3b8;
+            letter-spacing: 0.5px;
         }
 
         .ticker {
             display: flex;
             justify-content: space-around;
+            gap: 15px;
         }
 
         .box {
             background: #1f2937;
             padding: 15px;
-            border-radius: 10px;
-            width: 30%;
+            border-radius: 8px;
+            flex: 1;
+        }
+
+        .box-title {
+            font-size: 0.85rem;
+            color: #9ca3af;
+            margin-bottom: 5px;
+        }
+
+        .box-value {
+            font-size: 1.4rem;
+            font-weight: 700;
         }
 
         .green { color: #22c55e; }
@@ -45,39 +80,63 @@
         .red { color: #f87171; }
 
         canvas {
+            margin-top: 10px;
+        }
+
+        .links-bar {
             margin-top: 20px;
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        .links-bar a {
+            color: #38bdf8;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        .links-bar a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 
 <body>
 
-<h1>BINANCE — BTC/USDT Dashboard</h1>
+<h1>BINANCE — BTC/USDT Live Dashboard</h1>
+<div id="connection-status" class="status-badge">🟡 Connecting to real-time stream...</div>
 
 <div class="card">
     <h3>Live Ticker</h3>
 
     <div class="ticker">
         <div class="box">
-            <div>Last Price</div>
-            <div id="last" class="green">--</div>
+            <div class="box-title">Last Price</div>
+            <div id="last" class="box-value green">Loading...</div>
         </div>
 
         <div class="box">
-            <div>Bid</div>
-            <div id="bid" class="blue">--</div>
+            <div class="box-title">Bid</div>
+            <div id="bid" class="box-value blue">Loading...</div>
         </div>
 
         <div class="box">
-            <div>Ask</div>
-            <div id="ask" class="red">--</div>
+            <div class="box-title">Ask</div>
+            <div id="ask" class="box-value red">Loading...</div>
         </div>
     </div>
 </div>
 
 <div class="card">
-    <h3>Historical Chart</h3>
+    <h3>Historical & Live Price Chart</h3>
     <canvas id="chart"></canvas>
+</div>
+
+<div class="links-bar">
+    <a href="/health" target="_blank">Health Check JSON</a> •
+    <a href="/metrics" target="_blank">Prometheus Metrics</a> •
+    <a href="/docs" target="_blank">Swagger API Docs</a> •
+    <a href="/simulate-500" target="_blank">Incident Drill (500)</a>
 </div>
 
 <script>
@@ -91,68 +150,142 @@ const chart = new Chart(ctx, {
     data: {
         labels: labels,
         datasets: [{
-            label: "BTC/USDT Price",
+            label: "BTC/USDT Price (USD)",
             data: prices,
             borderColor: "#22d3ee",
-            tension: 0.3,
-            fill: false,
-            pointRadius: 3
+            backgroundColor: "rgba(34, 211, 238, 0.1)",
+            tension: 0.25,
+            fill: true,
+            pointRadius: 2,
+            pointHoverRadius: 5
         }]
     },
     options: {
+        responsive: true,
         plugins: {
             legend: { labels: { color: "white" } }
         },
         scales: {
-            x: { ticks: { color: "#ccc" }, grid: { color: "#333" }},
-            y: { ticks: { color: "#ccc" }, grid: { color: "#333" }}
+            x: { ticks: { color: "#9ca3af", maxTicksLimit: 12 }, grid: { color: "#1e293b" } },
+            y: { ticks: { color: "#9ca3af" }, grid: { color: "#1e293b" } }
         }
     }
 });
 
-// 🔹 Load historical
-async function loadData() {
-    const res = await fetch("/ohlcv?symbol=BTC/USDT");
-    const json = await res.json();
-
-    const raw = json.data;
-
-    raw.forEach(d => {
-        labels.push(new Date(d[0]).toLocaleTimeString());
-        prices.push(d[4]);
-    });
-
-    chart.update();
+function formatPrice(val) {
+    if (val === undefined || val === null || isNaN(val)) return "--";
+    return "$" + Number(val).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-// 🔹 WebSocket live
-const socket = new WebSocket("ws://127.0.0.1:8000/ws?symbol=BTC/USDT");
+function updateTickerUI(data) {
+    const last = data.last || data.close || (data.data && data.data.last);
+    const bid = data.bid || (last ? last - 1 : null) || (data.data && data.data.bid);
+    const ask = data.ask || (last ? last + 1 : null) || (data.data && data.data.ask);
 
-socket.onmessage = function(event) {
-    const msg = JSON.parse(event.data);
+    if (last) {
+        document.getElementById("last").innerText = formatPrice(last);
+        document.getElementById("bid").innerText = formatPrice(bid);
+        document.getElementById("ask").innerText = formatPrice(ask);
 
-    const last = msg.last || msg.close;
-    const bid = msg.bid || (last - 1);
-    const ask = msg.ask || (last + 1);
+        const time = new Date().toLocaleTimeString();
+        labels.push(time);
+        prices.push(last);
 
-    document.getElementById("last").innerText = last;
-    document.getElementById("bid").innerText = bid;
-    document.getElementById("ask").innerText = ask;
+        if (labels.length > 50) {
+            labels.shift();
+            prices.shift();
+        }
 
-    const time = new Date().toLocaleTimeString();
+        chart.update();
+    }
+}
 
-    labels.push(time);
-    prices.push(last);
+// 1. Load Historical Candlestick Data
+async function loadHistorical() {
+    try {
+        const res = await fetch("/historical?symbol=BTC/USDT&timeframe=1h&limit=30");
+        const json = await res.json();
+        const raw = json.data;
 
-    if (labels.length > 50) {
-        labels.shift();
-        prices.shift();
+        if (Array.isArray(raw)) {
+            labels.length = 0;
+            prices.length = 0;
+            raw.forEach(d => {
+                labels.push(new Date(d[0]).toLocaleTimeString());
+                prices.push(d[4]);
+            });
+            chart.update();
+        }
+    } catch (err) {
+        console.warn("Historical fetch notice:", err);
+    }
+}
+
+// 2. Fetch Initial Ticker (instant display without waiting)
+async function fetchInitialTicker() {
+    try {
+        const res = await fetch("/ticker?symbol=BTC/USDT");
+        const json = await res.json();
+        if (json.data) {
+            updateTickerUI(json.data);
+        }
+    } catch (err) {
+        console.warn("Initial ticker fetch notice:", err);
+    }
+}
+
+// 3. Dynamic Real-Time WebSocket Connection
+function connectWebSocket() {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${protocol}//${window.location.host}/ws?symbol=BTC/USDT`;
+    const statusElem = document.getElementById("connection-status");
+
+    let socket;
+    try {
+        socket = new WebSocket(wsUrl);
+    } catch (e) {
+        enablePollingFallback();
+        return;
     }
 
-    chart.update();
-};
+    socket.onopen = function() {
+        statusElem.innerHTML = "🟢 Live Real-Time Stream (WebSocket Connected)";
+        statusElem.style.color = "#4ade80";
+    };
 
-loadData();
+    socket.onmessage = function(event) {
+        try {
+            const data = JSON.parse(event.data);
+            updateTickerUI(data);
+        } catch (e) {
+            console.error("Message parse error:", e);
+        }
+    };
+
+    socket.onerror = function() {
+        statusElem.innerHTML = "🟡 WebSocket Stream Paused — Falling back to live polling...";
+        statusElem.style.color = "#facc15";
+        enablePollingFallback();
+    };
+
+    socket.onclose = function() {
+        statusElem.innerHTML = "🟡 Stream Reconnecting...";
+        statusElem.style.color = "#facc15";
+        setTimeout(connectWebSocket, 3000);
+    };
+}
+
+let pollingInterval = null;
+function enablePollingFallback() {
+    if (!pollingInterval) {
+        pollingInterval = setInterval(fetchInitialTicker, 2000);
+    }
+}
+
+// Initialize on page load
+loadHistorical();
+fetchInitialTicker();
+connectWebSocket();
 </script>
 
 </body>
