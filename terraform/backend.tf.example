@@ -1,0 +1,17 @@
+# ==============================================================================
+# Terraform Remote State S3 Backend Configuration
+# ==============================================================================
+# Usage:
+# 1. Run 'terraform apply' to create the S3 bucket and DynamoDB lock table in state_backend.tf
+# 2. Rename or copy this file to 'backend.tf' (or uncomment the block below in versions.tf)
+# 3. Run 'terraform init -migrate-state' to migrate local state to AWS S3.
+
+terraform {
+  backend "s3" {
+    bucket         = "craon-app-terraform-state"
+    key            = "craon-app/production/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "craon-app-terraform-locks"
+    encrypt        = true
+  }
+}

@@ -42,3 +42,13 @@ output "secrets_manager_secret_arn" {
   description = "ARN of Secrets Manager database URI secret"
   value       = aws_secretsmanager_secret.db_credentials.arn
 }
+
+output "terraform_state_bucket_name" {
+  description = "Name of the S3 bucket storing remote Terraform state"
+  value       = aws_s3_bucket.terraform_state.bucket
+}
+
+output "terraform_locks_dynamodb_table" {
+  description = "Name of the DynamoDB table used for Terraform state locking"
+  value       = aws_dynamodb_table.terraform_locks.name
+}
