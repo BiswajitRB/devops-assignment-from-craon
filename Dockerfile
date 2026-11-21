@@ -1,6 +1,4 @@
-# ==============================================================================
 # Stage 1: Build & Dependencies Resolution (Builder)
-# ==============================================================================
 FROM python:3.11-slim AS builder
 
 WORKDIR /app
@@ -18,11 +16,9 @@ COPY requirements.txt .
 # Install dependencies into /install folder
 RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
-# ==============================================================================
 # Stage 2: Minimal Distroless Runtime Image
 # Google Distroless Python image contains ONLY Python and essential C runtimes.
 # It has NO package manager (apt/pip), NO shell (bash/sh), and runs as nonroot.
-# ==============================================================================
 FROM gcr.io/distroless/python3-debian12:nonroot AS runner
 
 WORKDIR /app
