@@ -1,0 +1,27 @@
+# ==============================================================================
+# .trivyignore
+# Security Scanner Exclusion File for Trivy Container Vulnerability Scanning
+#
+# Guidelines:
+# - Each ignored CVE must include an explanation and justification.
+# - Do not suppress CRITICAL vulnerabilities that affect the running application.
+# - Trivy automatically detects this file in the repository root.
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Upstream Base Image / libc / Kernel CVEs without Available Fixes
+# ------------------------------------------------------------------------------
+
+# CVE-2023-45853: zlib buffer overflow in MiniZip (upstream Debian unpatched)
+# Rationale: MiniZip is not invoked or reachable by our Python FastAPI runtime.
+CVE-2023-45853
+
+# CVE-2024-24790: Go stdlib net/netip IPv6 address formatting issue
+# Rationale: External Go build dependency; runtime executes strictly on Python 3.11 distroless.
+CVE-2024-24790
+
+# ------------------------------------------------------------------------------
+# Temporary / Mitigated Vulnerabilities (Add expiry or tracking link)
+# ------------------------------------------------------------------------------
+# Format:
+# CVE-YYYY-XXXXX  # Reason: Mitigated by non-root user UID 65532 and read-only filesystem
