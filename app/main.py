@@ -39,9 +39,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# ------------------------------------------------------------------------------
 # Observability Middleware: Structured JSON Access Logging with Request ID
-# ------------------------------------------------------------------------------
 @app.middleware("http")
 async def structured_json_logging_middleware(request: Request, call_next):
     request_id = request.headers.get("x-request-id") or str(uuid.uuid4())
@@ -83,9 +81,7 @@ async def structured_json_logging_middleware(request: Request, call_next):
             headers={"x-request-id": request_id},
         )
 
-# ------------------------------------------------------------------------------
 # Prometheus Metric Exposition (/metrics)
-# ------------------------------------------------------------------------------
 if HAS_PROMETHEUS:
     Instrumentator().instrument(app).expose(app, endpoint="/metrics")
 else:

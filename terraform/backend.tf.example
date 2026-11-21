@@ -1,6 +1,4 @@
-# ==============================================================================
 # Terraform Remote State S3 Backend Configuration
-# ==============================================================================
 # Usage:
 # 1. Run 'terraform apply' to create the S3 bucket and DynamoDB lock table in state_backend.tf
 # 2. Rename or copy this file to 'backend.tf' (or uncomment the block below in versions.tf)

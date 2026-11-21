@@ -1,7 +1,5 @@
-# ==============================================================================
 # Terraform Remote State Storage: S3 Bucket & DynamoDB Lock Table
 # Production Best Practice: Encrypted, Versioned, and Locked State
-# ==============================================================================
 
 # 1. S3 Bucket for Storing terraform.tfstate
 resource "aws_s3_bucket" "terraform_state" {

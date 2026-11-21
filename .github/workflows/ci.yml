@@ -19,9 +19,7 @@ env:
   ECS_SERVICE_PROD: craon-crypto-api-production
 
 jobs:
-  # ============================================================================
   # STAGE 1: Shift-Left Fast Checks (Runs in Parallel, Fails in < 30 seconds)
-  # ============================================================================
   secret-scan:
     name: "Stage 1a: Secret Detection (Gitleaks)"
     runs-on: ubuntu-latest
@@ -49,10 +47,8 @@ jobs:
           dockerfile: "Dockerfile"
           failure-threshold: error
 
-  # ============================================================================
   # STAGE 2: Code Quality, Python Tests & SonarQube SAST
   # Depends on: Stage 1 (secret-scan AND dockerfile-lint must pass first)
-  # ============================================================================
   test-and-sonar:
     name: "Stage 2: Tests & SonarQube SAST"
     needs: [secret-scan, dockerfile-lint]
@@ -85,10 +81,8 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         continue-on-error: true
 
-  # ============================================================================
   # STAGE 3: Build Distroless Python Image & Trivy CVE Scanning
   # Depends on: Stage 2 (Code tests and SAST must pass first)
-  # ============================================================================
   build-and-trivy-scan:
     name: "Stage 3: Build & Trivy Image Scan"
     needs: [test-and-sonar]
@@ -125,10 +119,8 @@ jobs:
           severity: 'CRITICAL,HIGH'
           trivyignores: .trivyignore
 
-  # ============================================================================
   # STAGE 4: Deploy to Staging & Run Smoke Tests
   # Depends on: Stage 3 (Only runs on push to main if Trivy scan passed)
-  # ============================================================================
   deploy-staging:
     name: "Stage 4: Deploy to Staging Environment"
     needs: [build-and-trivy-scan]
@@ -168,9 +160,7 @@ jobs:
           echo "Executing automated smoke test on Staging /health endpoint..."
           # curl --fail --retry 5 --retry-delay 5 https://staging.craon.internal/health
 
-  # ============================================================================
   # STAGE 5: Production Deployment Gate (Requires Approval)
-  # ============================================================================
   deploy-production:
     name: "Stage 5: Promote to Production"
     needs: [deploy-staging]
