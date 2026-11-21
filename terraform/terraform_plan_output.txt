@@ -228,6 +228,42 @@ Terraform will perform the following actions:
         }
     }
 
+  # aws_dynamodb_table.terraform_locks will be created
+  + resource "aws_dynamodb_table" "terraform_locks" {
+      + arn              = (known after apply)
+      + billing_mode     = "PAY_PER_REQUEST"
+      + hash_key         = "LockID"
+      + id               = (known after apply)
+      + name             = "craon-app-terraform-locks"
+      + read_capacity    = (known after apply)
+      + stream_arn       = (known after apply)
+      + stream_label     = (known after apply)
+      + stream_view_type = (known after apply)
+      + tags             = {
+          + "Description" = "Distributed lock table for Terraform state concurrency"
+          + "Name"        = "craon-app-terraform-locks"
+        }
+      + tags_all         = {
+          + "Description" = "Distributed lock table for Terraform state concurrency"
+          + "Environment" = "production"
+          + "ManagedBy"   = "Terraform"
+          + "Name"        = "craon-app-terraform-locks"
+          + "Project"     = "Craon-DevOps-Assignment"
+        }
+      + write_capacity   = (known after apply)
+
+      + attribute {
+          + name = "LockID"
+          + type = "S"
+        }
+
+      + point_in_time_recovery (known after apply)
+
+      + server_side_encryption (known after apply)
+
+      + ttl (known after apply)
+    }
+
   # aws_ecr_lifecycle_policy.backend_policy will be created
   + resource "aws_ecr_lifecycle_policy" "backend_policy" {
       + id          = (known after apply)
@@ -377,7 +413,7 @@ Terraform will perform the following actions:
 
       + load_balancer {
           + container_name   = "backend"
-          + container_port   = 5000
+          + container_port   = 8000
           + target_group_arn = (known after apply)
             # (1 unchanged attribute hidden)
         }
@@ -806,7 +842,7 @@ Terraform will perform the following actions:
       + load_balancing_cross_zone_enabled  = (known after apply)
       + name                               = "craon-app-backend-tg"
       + name_prefix                        = (known after apply)
-      + port                               = 5000
+      + port                               = 8000
       + preserve_client_ip                 = (known after apply)
       + protocol                           = "HTTP"
       + protocol_version                   = (known after apply)
@@ -897,6 +933,111 @@ Terraform will perform the following actions:
       + target_group_health (known after apply)
 
       + target_health_state (known after apply)
+    }
+
+  # aws_s3_bucket.terraform_state will be created
+  + resource "aws_s3_bucket" "terraform_state" {
+      + acceleration_status         = (known after apply)
+      + acl                         = (known after apply)
+      + arn                         = (known after apply)
+      + bucket                      = "craon-app-terraform-state"
+      + bucket_domain_name          = (known after apply)
+      + bucket_prefix               = (known after apply)
+      + bucket_regional_domain_name = (known after apply)
+      + force_destroy               = false
+      + hosted_zone_id              = (known after apply)
+      + id                          = (known after apply)
+      + object_lock_enabled         = (known after apply)
+      + policy                      = (known after apply)
+      + region                      = (known after apply)
+      + request_payer               = (known after apply)
+      + tags                        = {
+          + "Description" = "Secure S3 remote state backend for Craon Terraform"
+          + "Name"        = "craon-app-terraform-state"
+        }
+      + tags_all                    = {
+          + "Description" = "Secure S3 remote state backend for Craon Terraform"
+          + "Environment" = "production"
+          + "ManagedBy"   = "Terraform"
+          + "Name"        = "craon-app-terraform-state"
+          + "Project"     = "Craon-DevOps-Assignment"
+        }
+      + website_domain              = (known after apply)
+      + website_endpoint            = (known after apply)
+
+      + cors_rule (known after apply)
+
+      + grant (known after apply)
+
+      + lifecycle_rule (known after apply)
+
+      + logging (known after apply)
+
+      + object_lock_configuration (known after apply)
+
+      + replication_configuration (known after apply)
+
+      + server_side_encryption_configuration (known after apply)
+
+      + versioning (known after apply)
+
+      + website (known after apply)
+    }
+
+  # aws_s3_bucket_lifecycle_configuration.terraform_state will be created
+  + resource "aws_s3_bucket_lifecycle_configuration" "terraform_state" {
+      + bucket                                 = (known after apply)
+      + expected_bucket_owner                  = (known after apply)
+      + id                                     = (known after apply)
+      + transition_default_minimum_object_size = "all_storage_classes_128K"
+
+      + rule {
+          + id     = "clean_old_state_versions"
+          + status = "Enabled"
+            # (1 unchanged attribute hidden)
+
+          + filter {
+                # (1 unchanged attribute hidden)
+            }
+
+          + noncurrent_version_expiration {
+              + noncurrent_days = 90
+            }
+        }
+    }
+
+  # aws_s3_bucket_public_access_block.terraform_state will be created
+  + resource "aws_s3_bucket_public_access_block" "terraform_state" {
+      + block_public_acls       = true
+      + block_public_policy     = true
+      + bucket                  = (known after apply)
+      + id                      = (known after apply)
+      + ignore_public_acls      = true
+      + restrict_public_buckets = true
+    }
+
+  # aws_s3_bucket_server_side_encryption_configuration.terraform_state will be created
+  + resource "aws_s3_bucket_server_side_encryption_configuration" "terraform_state" {
+      + bucket = (known after apply)
+      + id     = (known after apply)
+
+      + rule {
+          + apply_server_side_encryption_by_default {
+              + sse_algorithm     = "AES256"
+                # (1 unchanged attribute hidden)
+            }
+        }
+    }
+
+  # aws_s3_bucket_versioning.terraform_state will be created
+  + resource "aws_s3_bucket_versioning" "terraform_state" {
+      + bucket = (known after apply)
+      + id     = (known after apply)
+
+      + versioning_configuration {
+          + mfa_delete = (known after apply)
+          + status     = "Enabled"
+        }
     }
 
   # aws_secretsmanager_secret.db_credentials will be created
@@ -1021,14 +1162,14 @@ Terraform will perform the following actions:
       + ingress                = [
           + {
               + cidr_blocks      = []
-              + description      = "Allow traffic from ALB on port 5000"
-              + from_port        = 5000
+              + description      = "Allow traffic from ALB on port 8000"
+              + from_port        = 8000
               + ipv6_cidr_blocks = []
               + prefix_list_ids  = []
               + protocol         = "tcp"
               + security_groups  = (known after apply)
               + self             = false
-              + to_port          = 5000
+              + to_port          = 8000
             },
         ]
       + name                   = "craon-app-backend-task-sg"
@@ -1258,18 +1399,20 @@ Terraform will perform the following actions:
       + project_id         = "mock-atlas-project-id"
     }
 
-Plan: 41 to add, 0 to change, 0 to destroy.
+Plan: 47 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
-  + alb_dns_name                = (known after apply)
-  + alb_zone_id                 = (known after apply)
-  + backend_ecr_repository_url  = (known after apply)
-  + backend_service_name        = "craon-app-backend"
-  + ecs_cluster_name            = "craon-app-cluster"
-  + frontend_ecr_repository_url = (known after apply)
-  + frontend_service_name       = "craon-app-frontend"
-  + secrets_manager_secret_arn  = (known after apply)
-  + sns_alert_topic_arn         = (known after apply)
+  + alb_dns_name                   = (known after apply)
+  + alb_zone_id                    = (known after apply)
+  + backend_ecr_repository_url     = (known after apply)
+  + backend_service_name           = "craon-app-backend"
+  + ecs_cluster_name               = "craon-app-cluster"
+  + frontend_ecr_repository_url    = (known after apply)
+  + frontend_service_name          = "craon-app-frontend"
+  + secrets_manager_secret_arn     = (known after apply)
+  + sns_alert_topic_arn            = (known after apply)
+  + terraform_locks_dynamodb_table = "craon-app-terraform-locks"
+  + terraform_state_bucket_name    = "craon-app-terraform-state"
 
 ─────────────────────────────────────────────────────────────────────────────
 
