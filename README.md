@@ -79,10 +79,13 @@ terraform destroy -auto-approve
 ## 3. Staged DevSecOps Pipeline (GitHub Actions)
 
 * **Pipeline File**: [.github/workflows/ci.yml](file:///d:/homeassigement/.github/workflows/ci.yml)
-* **Stage 1 (Parallel < 30s)**: Secret detection (Gitleaks) + Dockerfile linting (Hadolint).
-* **Stage 2**: Unit tests & SonarQube SAST analysis (`needs: [secret-scan, dockerfile-lint]`).
+* **Stage 1 (Shift-Left Fast Checks < 30s)**:
+  * Secret detection (`gitleaks-action`)
+  * Container Dockerfile linting (`hadolint-action`)
+  * **Terraform Automation Check**: `terraform fmt -check`, `terraform validate`, and speculative `terraform plan` to guarantee zero configuration drift or syntax errors.
+* **Stage 2**: Unit tests & SonarQube SAST analysis (`needs: [secret-scan, dockerfile-lint, terraform-lint-and-validate]`).
 * **Stage 3**: Build Distroless Python image & Trivy container CVE scan (`needs: [test-and-sonar]`).
-* **Stage 4**: Deploy to Staging environment & automated `/health` smoke test (Conditional trigger).
+* **Stage 4**: Deploy to Staging environment & automated `/health` smoke test (Gated by AWS credentials).
 * **Stage 5**: Production deployment gate with approval.
 
 > [!NOTE]
