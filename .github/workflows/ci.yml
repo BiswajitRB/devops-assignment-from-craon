@@ -47,11 +47,44 @@ jobs:
           dockerfile: "Dockerfile"
           failure-threshold: error
 
+  terraform-lint-and-validate:
+    name: "Stage 1c: Terraform Automation Validation & Plan"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform CLI
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.5"
+
+      - name: Check Terraform Formatting
+        run: terraform fmt -check
+
+      - name: Initialize Terraform
+        run: terraform init -backend=false
+
+      - name: Validate Terraform Syntax & Configuration
+        run: terraform validate
+
+      - name: Run Terraform Speculative Plan
+        run: |
+          terraform plan -no-color \
+            -var="aws_region=us-east-1" \
+            -var="mongodbatlas_public_key=dummy_public_key" \
+            -var="mongodbatlas_private_key=dummy_private_key" \
+            -var="mongodbatlas_org_id=dummy_org_id" \
+            -var="db_password=dummy_db_password"
+
   # STAGE 2: Code Quality, Python Tests & SonarQube SAST
   # Depends on: Stage 1 (secret-scan AND dockerfile-lint must pass first)
   test-and-sonar:
     name: "Stage 2: Tests & SonarQube SAST"
-    needs: [secret-scan, dockerfile-lint]
+    needs: [secret-scan, dockerfile-lint, terraform-lint-and-validate]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
