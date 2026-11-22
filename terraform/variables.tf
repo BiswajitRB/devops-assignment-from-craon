@@ -91,6 +91,12 @@ variable "mongodbatlas_project_id" {
   default     = "mock-atlas-project-id"
 }
 
+variable "mongodbatlas_org_id" {
+  type        = string
+  description = "MongoDB Atlas Organization ID"
+  default     = "mock-atlas-org-id"
+}
+
 variable "db_username" {
   type        = string
   description = "MongoDB database username"
