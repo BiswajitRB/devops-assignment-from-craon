@@ -1,0 +1,14 @@
+# Example Terraform variables (DO NOT COMMIT SENSITIVE VALUES TO GIT)
+aws_region     = "us-east-1"
+environment    = "production"
+app_name       = "craon-app"
+backend_image  = "123456789012.dkr.ecr.us-east-1.amazonaws.com/craon-backend:latest"
+frontend_image = "123456789012.dkr.ecr.us-east-1.amazonaws.com/craon-frontend:latest"
+alert_email    = "devops-alerts@craon.com"
+
+# MongoDB Atlas Credentials (set in environment or CI/CD secret store)
+mongodbatlas_public_key  = "sample_atlas_public_key"
+mongodbatlas_private_key = "sample_atlas_private_key"
+mongodbatlas_project_id  = "sample_atlas_project_id"
+db_username              = "craon_admin"
+db_password              = "ReplaceWithStrongPassword123!"

@@ -39,9 +39,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# ------------------------------------------------------------------------------
 # Observability Middleware: Structured JSON Access Logging with Request ID
-# ------------------------------------------------------------------------------
 @app.middleware("http")
 async def structured_json_logging_middleware(request: Request, call_next):
     request_id = request.headers.get("x-request-id") or str(uuid.uuid4())
@@ -83,9 +81,7 @@ async def structured_json_logging_middleware(request: Request, call_next):
             headers={"x-request-id": request_id},
         )
 
-# ------------------------------------------------------------------------------
 # Prometheus Metric Exposition (/metrics)
-# ------------------------------------------------------------------------------
 if HAS_PROMETHEUS:
     Instrumentator().instrument(app).expose(app, endpoint="/metrics")
 else:
@@ -101,9 +97,14 @@ app.include_router(market.router)
 app.include_router(historical.router)
 app.include_router(health.router)
 
-# Root endpoint
+# Root endpoint - serves the live dashboard directly
 @app.get("/")
 def root():
+    return FileResponse("app/static/index.html")
+
+# API Directory & metadata
+@app.get("/api")
+def api_directory():
     return {
         "message": "MCP Crypto Server Running 🚀",
         "endpoints": {

@@ -6,6 +6,11 @@ client = TestClient(app, raise_server_exceptions=False)
 def test_root():
     response = client.get("/")
     assert response.status_code == 200
+    assert "text/html" in response.headers.get("content-type", "")
+
+def test_api():
+    response = client.get("/api")
+    assert response.status_code == 200
     assert "endpoints" in response.json()
 
 def test_health():
