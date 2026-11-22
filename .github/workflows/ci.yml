@@ -71,8 +71,10 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run Pytest Test Suite
+        env:
+          PYTHONPATH: .
         run: |
-          pytest tests/ -v
+          python -m pytest tests/ -v
 
       - name: SonarQube SAST Scan
         uses: sonarsource/sonarqube-scan-action@v2
@@ -120,11 +122,12 @@ jobs:
           trivyignores: .trivyignore
 
   # STAGE 4: Deploy to Staging & Run Smoke Tests
-  # Depends on: Stage 3 (Only runs on push to main if Trivy scan passed)
+  # Deployment-Ready Design: Only runs if AWS_ROLE_ARN secret is configured (or on workflow_dispatch)
+  # This prevents unwanted cloud billing while allowing immediate deployment when credentials exist.
   deploy-staging:
     name: "Stage 4: Deploy to Staging Environment"
     needs: [build-and-trivy-scan]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.AWS_ROLE_ARN != ''
     runs-on: ubuntu-latest
     environment: staging
     steps:
@@ -164,7 +167,7 @@ jobs:
   deploy-production:
     name: "Stage 5: Promote to Production"
     needs: [deploy-staging]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.AWS_ROLE_ARN != ''
     runs-on: ubuntu-latest
     environment: production # Uses GitHub Environment protection rules (manual approval)
     steps:
