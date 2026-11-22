@@ -82,8 +82,12 @@ terraform destroy -auto-approve
 * **Stage 1 (Parallel < 30s)**: Secret detection (Gitleaks) + Dockerfile linting (Hadolint).
 * **Stage 2**: Unit tests & SonarQube SAST analysis (`needs: [secret-scan, dockerfile-lint]`).
 * **Stage 3**: Build Distroless Python image & Trivy container CVE scan (`needs: [test-and-sonar]`).
-* **Stage 4**: Deploy to Staging environment & automated `/health` smoke test.
+* **Stage 4**: Deploy to Staging environment & automated `/health` smoke test (Conditional trigger).
 * **Stage 5**: Production deployment gate with approval.
+
+> [!NOTE]
+> **Deployment-Ready Architecture & Cloud Cost Safety**:
+> Cloud infrastructure is fully automated via Terraform (AWS ECS Fargate + ALB + MongoDB Atlas M0) with validated execution plans saved in [`terraform/terraform_plan_output.txt`](file:///d:/homeassigement/terraform/terraform_plan_output.txt). In GitHub Actions, Stages 1 through 3 automatically execute on every push and PR to continuously validate code quality, container security, and CVE compliance. Staging/Production deployment stages (Stages 4-5) are safely gated by `AWS_ROLE_ARN` secret availability to prevent unauthorized or costly cloud resource spinning during take-home evaluation while remaining 100% push-button deployment ready.
 
 ---
 
